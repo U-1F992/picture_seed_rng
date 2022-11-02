@@ -7,7 +7,8 @@
 `Poke-Controller-Modified/SerialController/Commands/PythonCommands/`以下にcloneしてください。
 
 ```sh
-git clone --depth=1 https://github.com/mukai1011/picture_seed_rng.git
+# Poke-Controller-Modifiedのルートにいる場合
+git clone --depth=1 https://github.com/mukai1011/picture_seed_rng.git -o ./SerialController/Commands/PythonCommands/
 ```
 
 ## 動作の解説
@@ -18,7 +19,6 @@ stateDiagram-v2
     Reset: リセット
     StandbyMultiBoot: マルチブート待機
     CancelMultiBoot: マルチブート待ち受け解除
-    SkipOpening: オープニングをスキップ
     Load: ロード
     Appreciate: 絵画鑑賞
     Move: 移動
@@ -34,8 +34,7 @@ stateDiagram-v2
         StandbyMultiBoot --> fork1
 
         fork1 --> CancelMultiBoot
-        CancelMultiBoot --> SkipOpening
-        SkipOpening --> Load
+        CancelMultiBoot --> Load
         Load --> join1
 
         fork1 --> Wait1
