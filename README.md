@@ -8,7 +8,7 @@
 
 ```sh
 # Poke-Controller-Modifiedのルートにいる場合
-git clone --depth=1 https://github.com/mukai1011/picture_seed_rng.git -o ./SerialController/Commands/PythonCommands/
+git clone --depth=1 https://github.com/mukai1011/picture_seed_rng.git ./SerialController/Commands/PythonCommands/picture_seed_rng
 ```
 
 ## 動作の解説
