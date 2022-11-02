@@ -1,8 +1,7 @@
 from typing import List, Tuple, Union
 
 from Commands.PythonCommandBase import ImageProcPythonCommand
-from Commands.Keys import Button, Hat
-from SerialController.Commands.Keys import Direction
+from Commands.Keys import Button, Direction, Hat
 
 # Pythonコマンド_作成How_to
 # - https://github.com/KawaSwitch/Poke-Controller/wiki/Python%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89_%E4%BD%9C%E6%88%90How_to
