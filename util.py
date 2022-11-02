@@ -10,7 +10,7 @@ def convert_frame_to_millisecond(frame: int) -> float:
     return frame / FRAMES_PER_SECOND
 
 class WaitThread(Thread):
-    """一定時間待機するスレッド
+    """指定時間待機するスレッド
     """
     def __init__(self, command: PythonCommand, wait_frame: int, calibration_frame: int):
         """WaitThreadクラスのインスタンスを初期化する。
@@ -32,6 +32,12 @@ class Operation(Protocol):
         pass
 
 def execute(operations: Tuple[Operation, Operation, Operation, Operation, Operation], wait_threads: Tuple[WaitThread, WaitThread]):
+    """絵画seed乱数調整を実行する。
+
+    Args:
+        operations (Tuple[Operation, Operation, Operation, Operation, Operation]): 各操作を定義したオブジェクトのタプル
+        wait_threads (Tuple[WaitThread, WaitThread]): 指定時間待機するWaitThreadオブジェクトのタプル
+    """
     
     reset, load_game, see_picture, move_to_destination, encounter = operations
     wait_until_seeing, wait_until_encountering = wait_threads
