@@ -1,53 +1,62 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from abc import ABCMeta
+
 from Commands.PythonCommandBase import PythonCommand, ImageProcPythonCommand
 from Commands.Keys import KeyPress, Button, Hat, Direction, Stick
 
 from .util import WaitThread, execute
 
-class Reset():
+class OperationWithCommand(metaclass=ABCMeta):
+    """ImageProcPythonCommandを使用する操作定義の抽象基底クラス
+    """
+    def __init__(self, command: ImageProcPythonCommand):
+        self.__command = command
+    def run(self):
+        pass
+
+class Reset(OperationWithCommand):
     """リセットして、マルチブート待機までの操作を定義するクラス
     """
-    def __init__(self, command: ImageProcPythonCommand):
-        self.__command = command
     def run(self):
-        pass
+        self.__command.wait(1)
 
-class LoadGame():
+        self.__command.press(Button.ZR, 0.1, 2)
+        self.__command.press(Button.A, 0.1, 1)
+        self.__command.press(Hat.LEFT, 0.1, 1)
+        self.__command.press(Button.A, 0.1, 1)
+        self.__command.press(Button.A, 0.1, 1)
+        self.__command.press([Button.A, Button.B], 4, 1)
+
+class LoadGame(OperationWithCommand):
     """マルチブート待ち受けを解除して、絵画鑑賞の直前までの操作を定義するクラス
     """
-    def __init__(self, command: ImageProcPythonCommand):
-        self.__command = command
     def run(self):
         pass
 
-class SeePicture():
+class SeePicture(OperationWithCommand):
     """絵画を見て、離脱する操作を定義するクラス
     """
-    def __init__(self, command: ImageProcPythonCommand):
-        self.__command = command
     def run(self):
         pass
 
-class MoveToDestination():
+class MoveToDestination(OperationWithCommand):
     """絵画を見た直後から、エンカウントの直前まで移動する操作を定義するクラス
     """
-    def __init__(self, command: ImageProcPythonCommand):
-        self.__command = command
     def run(self):
         pass
 
-class Encounter():
+class Encounter(OperationWithCommand):
     """エンカウント直前から、エンカウントする操作を定義するクラス
     """
-    def __init__(self, command: ImageProcPythonCommand):
-        self.__command = command
     def run(self):
         pass
 
 class PaintSeed(ImageProcPythonCommand):
+    
     NAME = '絵画seed乱数調整のテンプレート'
+
     def __init__(self, cam, gui=None):
         super().__init__(cam, gui)
 

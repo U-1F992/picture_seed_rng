@@ -1,4 +1,4 @@
-# ThirdGenPictureSeed
+# picture_seed_rng
 
 絵画seed乱数調整の自動化（Poke-Controller MODIFIED用）
 
@@ -7,7 +7,7 @@
 `Poke-Controller-Modified/SerialController/Commands/PythonCommands/`以下にcloneしてください。
 
 ```sh
-git clone --depth=1 https://github.com/mukai1011/ThirdGenPictureSeed.git
+git clone --depth=1 https://github.com/mukai1011/picture_seed_rng.git
 ```
 
 ## 動作の解説
