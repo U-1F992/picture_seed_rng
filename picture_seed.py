@@ -1,42 +1,46 @@
 from datetime import datetime, timedelta
 from multiprocessing import Process
 from typing import List, Tuple
-from typing_extensions import Protocol
 
-class Operation(Protocol):
-    def run(self):
-        pass
+from .pokecon_extension import wait
+from .protocol import Event, Operation
 
 def _run_and_wait_in_parallel(operations: List[Operation], wait: Process):
     """待機している間、ほかの操作を実行する。
     """
-    wait.start()
-    for op in operations:
-        op.run()
+    try:
+        wait.start()
+        for op in operations:
+            op.run()
 
-    if not wait.is_alive():
-        raise Exception("ロード完了前に待機が終了しました。")
-    wait.join()
+        if not wait.is_alive():
+            raise Exception("ロード完了前に待機が終了しました。")
+    except:
+        raise
+    finally:
+        wait.join()
 
 def _get_eta(seconds: float):
     return datetime.now() + timedelta(seconds=seconds)
 
 def execute(
     operations: Tuple[Operation, Operation, Operation, Operation, Operation], 
-    wait_processes: Tuple[Process, Process], 
-    wait_seconds: Tuple[float, float]
+    wait_seconds: Tuple[float, float],
+    event: Event
 ):
     """絵画seed乱数調整を実行する。
 
     Args:
         operations (Tuple[Operation, Operation, Operation, Operation, Operation]): 各操作を定義したオブジェクトのタプル
-        wait_processes (Tuple[Tuple[Process, float], Tuple[Process, float]]): 指定時間待機するProcessオブジェクトのタプル
-        wait_seconds (Tuple[float, float]): 指定した待機時間のタプル
+        wait_seconds (Tuple[float, float]): 指定する待機時間のタプル
+        event (Event): 中断用`Event`オブジェクト
     """
     
     reset, load_game, see_picture, move_to_destination, encounter = operations
-    wait_until_seeing, wait_until_encountering = wait_processes
     seconds_until_seeing, seconds_until_encountering = wait_seconds
+    
+    wait_until_seeing = Process(target=wait, args=(seconds_until_seeing, event))
+    wait_until_encountering = Process(target=wait, args=(seconds_until_encountering, event))
 
     reset.run()
 

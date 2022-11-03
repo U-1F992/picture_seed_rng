@@ -1,9 +1,10 @@
 from time import perf_counter, sleep
 from typing import List, Tuple, Union
-from typing_extensions import Protocol
 
 from Commands.PythonCommandBase import PythonCommand, ImageProcPythonCommand
 from Commands.Keys import Button, Direction, Hat
+
+from .protocol import Event
 
 # Pythonコマンド_作成How_to
 # - https://github.com/KawaSwitch/Poke-Controller/wiki/Python%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89_%E4%BD%9C%E6%88%90How_to
@@ -95,12 +96,6 @@ def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombinati
     else:
         command.press(*argument)
         return True
-
-class Event(Protocol):
-    def is_set(self) -> bool:
-        pass
-    def set(self):
-        pass
 
 def check_if_alive(command: PythonCommand, event: Event):
     """PythonCommandオブジェクトの`alive`がFalseになった場合にEventをセットする。

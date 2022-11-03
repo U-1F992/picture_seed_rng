@@ -47,11 +47,9 @@ class PictureSeedRNG(ImageProcPythonCommand):
         frame_until_encountering = 65029
         calibration_encountering = -511
         
-        second_until_seeing = _convert_frame_to_second(frame_until_seeing + calibration_seeing)
-        second_until_encountering = _convert_frame_to_second(frame_until_encountering + calibration_encountering)
         wait_seconds = (
-            second_until_seeing,
-            second_until_encountering
+            _convert_frame_to_second(frame_until_seeing + calibration_seeing),
+            _convert_frame_to_second(frame_until_encountering + calibration_encountering)
         )
 
         operations = (
@@ -65,19 +63,11 @@ class PictureSeedRNG(ImageProcPythonCommand):
         event = Event()
         check = Thread(target=check_if_alive, args=(self, event))
         check.start()
-        
-        wait_processes = (
-            Process(target=wait, args=(second_until_seeing, event)),
-            Process(target=wait, args=(second_until_encountering, event))
-        )
 
         try:
-            execute(operations, wait_processes, wait_seconds)
+            execute(operations, wait_seconds, event)
 
         except Exception as e:
             print(f"操作は中断されました。{e.with_traceback(None)}")
+            raise
         
-        finally:
-            check.join()
-            for proc in wait_processes:
-                proc.join()
