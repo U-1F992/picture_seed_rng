@@ -152,6 +152,18 @@ class Encounter():
             execute_sequence(self.__command, [
                 (Button.A, DEFAULT_DURATION, 15),
                 (Button.B, DEFAULT_DURATION, 5),
+                (Hat.RIGHT, DEFAULT_DURATION, 0.75),
+                (Button.A, DEFAULT_DURATION, 3),
+                (Hat.RIGHT, DEFAULT_DURATION, 0.75),
+                (Button.A, DEFAULT_DURATION, 0.75),
+                (Button.A, DEFAULT_DURATION, 16),
+                *repeat((Button.B, DEFAULT_DURATION, 3), 4),
+                (Button.HOME, DEFAULT_DURATION, 3),
+                (Hat.BTM, DEFAULT_DURATION, 3),
+                (Button.A, DEFAULT_DURATION, 3),
+                (Hat.BTM, DEFAULT_DURATION, 3),
+                (Button.A, DEFAULT_DURATION, 3),
+                (Button.A, DEFAULT_DURATION, 3),
             ])
         except FileNotFoundError as e:
             raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')

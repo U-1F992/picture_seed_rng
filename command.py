@@ -1,6 +1,8 @@
 from multiprocessing import Event
 from threading import Thread
+
 from Commands.PythonCommandBase import ImageProcPythonCommand
+from Commands.Keys import Hat
 
 from .error import InterruptError
 from .operations import Encounter, LoadGame, MoveToDestination, Reset, SeePicture
@@ -16,13 +18,14 @@ author: @meilleur_pkmn
 prerequisite:
 - Zメニューのカーソルが「カートリッジこうかん」に合っている。
 - ミナモシティのコンテスト会場の左端の絵画の前でセーブしている。
+- 手持ちを1体にして、ボールの一番上にマスターボールがある。
 
 information:
-フレームカウンタ: 0x661B(F) = 26139 = 7分15秒程度
-待機: 65029(F) = 18分3秒程度
-ひかえめ　めざ炎70
+フレームカウンタ: 0x9E28 = 40488(F)
+待機: 48134(F)
+おくびょう 30 3 30 31 31 31 氷70
 
-絵画seedずれ: 63F
+絵画seedずれ: 24F
 エンカウントずれ: -511F
 ==================
 """
@@ -42,10 +45,10 @@ class PictureSeedRNG(ImageProcPythonCommand):
     def do(self):
         print(MESSAGE)
 
-        frame_until_seeing = 26139
-        calibration_seeing = 63
+        frame_until_seeing = 40488
+        calibration_seeing = 24
         
-        frame_until_encountering = 65029
+        frame_until_encountering = 48134
         calibration_encountering = -511
         
         wait_seconds = (
@@ -65,10 +68,18 @@ class PictureSeedRNG(ImageProcPythonCommand):
         check = Thread(target=check_if_alive, args=(self, event))
         check.start()
 
-        try:
-            execute(operations, wait_seconds, event)
-
-        except InterruptError as e:
-            print(str(e))
-            # 最終的にStopThreadを送出して、コマンド実行を終了させる。
-            self.checkIfAlive()
+        
+        while True:
+            try:
+                execute(operations, wait_seconds, event)
+            except InterruptError as e:
+                print(str(e))
+                # 最終的にStopThreadを送出して、コマンド実行を終了させる。
+                self.checkIfAlive()
+            
+            self.save_capture()
+    
+    def save_capture(self):
+        self.camera.saveCapture()
+        self.press(Hat.RIGHT, 0.05, 3)
+        self.camera.saveCapture()
