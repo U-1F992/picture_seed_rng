@@ -81,6 +81,9 @@ def execute(
 
         encounter.run()
     
+    except InterruptError:
+        raise
+
     finally:
         # 例外処理は呼び出し元に投げるが、Processは破棄する
         for proc in [proc for proc in [wait_until_seeing, wait_until_encountering] if proc.is_alive()]:

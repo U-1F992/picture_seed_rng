@@ -1,6 +1,6 @@
 from os.path import abspath, basename, dirname, exists, join
 
-from Commands.PythonCommandBase import ImageProcPythonCommand
+from Commands.PythonCommandBase import ImageProcPythonCommand, TEMPLATE_PATH
 from Commands.Keys import Button, Hat
 
 from .error import NotMatchError, InterruptError
@@ -10,10 +10,12 @@ DEFAULT_DURATION = 0.05
 
 # PythonCommandBase.pyで指定されたパスからたどって、リポジトリのtemplatesフォルダを指定する。
 # `join(dirname(abspath(__file__)), "templates")`と同じ場所を指したい
-BASE_DIR_NAME = basename(dirname(__file__))
-TEMPLATE_PATH = join("..", "Commands", "PythonCommands", BASE_DIR_NAME, "templates") + "/"
+BASE_PATH = join(TEMPLATE_PATH, "..", "Commands", "PythonCommands", basename(dirname(__file__)), "templates")
 def resolve(fileName: str):
-    return join(TEMPLATE_PATH, fileName)
+    ret = join(BASE_PATH, fileName)
+    if not exists(ret):
+        raise FileNotFoundError(ret)
+    return ret
 
 class Reset():
     """リセットして、マルチブート待機までの操作を定義するクラス
@@ -41,6 +43,8 @@ class Reset():
                 ([Button.HOME, Button.X], 4, 2),
                 (resolve("gameboy_logo.png"),),
             ])
+        except FileNotFoundError as e:
+            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
             raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
 
@@ -67,6 +71,8 @@ class LoadGame():
                 # セーブデータ選択
                 (Button.A, DEFAULT_DURATION, 2),
             ])
+        except FileNotFoundError as e:
+            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
             raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
 
@@ -83,6 +89,8 @@ class SeePicture():
                 # 絵画画面から離脱する
                 (Button.A, DEFAULT_DURATION, 2),
             ])
+        except FileNotFoundError as e:
+            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
             raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
 
@@ -129,6 +137,8 @@ class MoveToDestination():
                 (Hat.TOP, DEFAULT_DURATION, 2.5),
                 *repeat((Hat.TOP, DEFAULT_DURATION, 0.75), 6),
             ])
+        except FileNotFoundError as e:
+            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
             raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
 
@@ -143,5 +153,7 @@ class Encounter():
                 (Button.A, DEFAULT_DURATION, 15),
                 (Button.B, DEFAULT_DURATION, 5),
             ])
+        except FileNotFoundError as e:
+            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
             raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
