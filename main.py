@@ -32,7 +32,7 @@ GC_FPS = 59.7275
 def _convert_frame_to_second(frame: int):
     return frame / GC_FPS
 
-class PaintSeed(ImageProcPythonCommand):
+class PictureSeedRNG(ImageProcPythonCommand):
     
     NAME = '絵画seed乱数調整サンプル'
 
