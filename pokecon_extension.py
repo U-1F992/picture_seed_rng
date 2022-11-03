@@ -83,7 +83,7 @@ def execute_sequence(command: ImageProcPythonCommand, arguments: List[ArgumentCo
         NotMatchError: `isContainTemplate`がFalseを返した
     """
     for argument in arguments:
-        print(f"[DEBUG]: {argument}")
+        #print(f"[DEBUG]: {argument}")
         try:
             _execute_method(command, argument)
         except NotMatchError:

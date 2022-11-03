@@ -10,11 +10,11 @@ DEFAULT_DURATION = 0.05
 
 # PythonCommandBase.pyで指定されたパスからたどって、リポジトリのtemplatesフォルダを指定する。
 # `join(dirname(abspath(__file__)), "templates")`と同じ場所を指したい
-BASE_PATH = join(TEMPLATE_PATH, "..", "Commands", "PythonCommands", basename(dirname(__file__)), "templates")
+BASE_PATH = join("..", "Commands", "PythonCommands", basename(dirname(__file__)), "templates")
 def resolve(fileName: str):
     ret = join(BASE_PATH, fileName)
-    if not exists(ret):
-        raise FileNotFoundError(ret)
+    if not exists(join(TEMPLATE_PATH, ret)):
+        raise FileNotFoundError(basename(ret))
     return ret
 
 class Reset():
