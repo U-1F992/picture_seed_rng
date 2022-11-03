@@ -1,6 +1,8 @@
+from time import perf_counter, sleep
 from typing import List, Tuple, Union
+from typing_extensions import Protocol
 
-from Commands.PythonCommandBase import ImageProcPythonCommand
+from Commands.PythonCommandBase import PythonCommand, ImageProcPythonCommand
 from Commands.Keys import Button, Direction, Hat
 
 # Pythonコマンド_作成How_to
@@ -79,11 +81,12 @@ def execute_sequence(command: ImageProcPythonCommand, arguments: List[ArgumentCo
         Exception: `isContainTemplate`がFalseを返した
     """
     for argument in arguments:
+        # print(f"[DEBUG]: {argument}")
         if not _execute_method(command, argument):
             raise Exception("isContainTemplateがFalseを返しました。")
 
 def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombination) -> bool:
-    
+
     # ArgumentCombinationはいずれの場合も少なくとも1つの要素があり、
     # IsContainTemplateArgumentCombinationの場合は、先頭の型は必ずstr
 
@@ -92,3 +95,30 @@ def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombinati
     else:
         command.press(*argument)
         return True
+
+class Event(Protocol):
+    def is_set(self) -> bool:
+        pass
+    def set(self):
+        pass
+
+def check_if_alive(command: PythonCommand, event: Event):
+    """PythonCommandオブジェクトの`alive`がFalseになった場合にEventをセットする。
+    """
+    while command.alive:
+        # GUIのレスポンスのため。
+        # Processを止めたいだけなのでタイミングはシビアではない。
+        sleep(1)
+    
+    event.set()
+
+def wait(seconds: float, event: Event):
+    """指定時間待機する（別プロセスで実行することを想定）
+
+    Args:
+        seconds (float): 待機する秒数
+        event (Event): 中断用`Event`オブジェクト
+    """
+    current_time = perf_counter()
+    while perf_counter() < current_time + seconds and not event.is_set():
+        pass
