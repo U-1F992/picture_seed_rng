@@ -1,10 +1,11 @@
-from multiprocessing import Event, Process
+from multiprocessing import Event
 from threading import Thread
 from Commands.PythonCommandBase import ImageProcPythonCommand
 
+from .error import InterruptError
 from .operations import Encounter, LoadGame, MoveToDestination, Reset, SeePicture
 from .picture_seed import execute
-from .pokecon_extension import check_if_alive, wait
+from .pokecon_extension import check_if_alive
 
 VERSION = "v1.0.0"
 MESSAGE = f"""
@@ -67,7 +68,7 @@ class PictureSeedRNG(ImageProcPythonCommand):
         try:
             execute(operations, wait_seconds, event)
 
-        except Exception as e:
-            print(f"操作は中断されました。{e.with_traceback(None)}")
-            raise
-        
+        except InterruptError as e:
+            print(str(e))
+            # 最終的にStopThreadを送出して、コマンド実行を終了させる。
+            self.checkIfAlive()

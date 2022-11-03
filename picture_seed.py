@@ -1,24 +1,41 @@
 from datetime import datetime, timedelta
 from multiprocessing import Process
+from time import perf_counter
 from typing import List, Tuple
 
-from .pokecon_extension import wait
+from .error import InterruptError
 from .protocol import Event, Operation
 
-def _run_and_wait_in_parallel(operations: List[Operation], wait: Process):
+def wait(seconds: float, event: Event):
+    """指定時間待機する（別プロセスで実行することを想定）
+
+    Args:
+        seconds (float): 待機する秒数
+        event (Event): 中断用`Event`オブジェクト
+    """
+    current_time = perf_counter()
+    while perf_counter() < current_time + seconds and not event.is_set():
+        pass
+
+def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event: Event):
     """待機している間、ほかの操作を実行する。
     """
-    try:
-        wait.start()
-        for op in operations:
-            op.run()
-
-        if not wait.is_alive():
-            raise Exception("ロード完了前に待機が終了しました。")
-    except:
-        raise
-    finally:
-        wait.join()
+    timer.start()
+    
+    for op in operations:
+        op.run()
+    
+    #
+    # 正常に待機が完了
+    # => joinは正常に終了する。
+    #
+    # GUIのStopにより中断
+    # => check_if_aliveによってeventがセットされ、joinは正常に終了する。
+    #    eventを確認し、中断を検知する。
+    # 
+    timer.join()
+    if event.is_set():
+        raise InterruptError("待機を中断しました。")
 
 def _get_eta(seconds: float):
     return datetime.now() + timedelta(seconds=seconds)
@@ -42,24 +59,29 @@ def execute(
     wait_until_seeing = Process(target=wait, args=(seconds_until_seeing, event))
     wait_until_encountering = Process(target=wait, args=(seconds_until_encountering, event))
 
-    reset.run()
+    try:
+        reset.run()
 
-    print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_seeing)}")
-    _run_and_wait_in_parallel(
-        [
-            load_game
-        ], 
-        wait_until_seeing
-    )
+        print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_seeing)}")
+        _run_and_wait_in_parallel(
+            [
+                load_game
+            ], 
+            wait_until_seeing, event
+        )
 
-    print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_encountering)}")
-    _run_and_wait_in_parallel(
-        [
-            see_picture, 
-            move_to_destination
-        ], 
-        wait_until_encountering
-    )
+        print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_encountering)}")
+        _run_and_wait_in_parallel(
+            [
+                see_picture, 
+                move_to_destination
+            ], 
+            wait_until_encountering, event
+        )
 
-    encounter.run()
+        encounter.run()
     
+    finally:
+        # 例外処理は呼び出し元に投げるが、Processは破棄する
+        for proc in [proc for proc in [wait_until_seeing, wait_until_encountering] if proc.is_alive()]:
+            proc.join()

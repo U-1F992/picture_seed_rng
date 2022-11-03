@@ -1,9 +1,10 @@
-from time import perf_counter, sleep
+from time import sleep
 from typing import List, Tuple, Union
 
 from Commands.PythonCommandBase import PythonCommand, ImageProcPythonCommand
 from Commands.Keys import Button, Direction, Hat
 
+from .error import NotMatchError
 from .protocol import Event
 
 # Pythonコマンド_作成How_to
@@ -79,41 +80,32 @@ def execute_sequence(command: ImageProcPythonCommand, arguments: List[ArgumentCo
     ```
     
     Raises:
-        Exception: `isContainTemplate`がFalseを返した
+        NotMatchError: `isContainTemplate`がFalseを返した
     """
     for argument in arguments:
-        # print(f"[DEBUG]: {argument}")
-        if not _execute_method(command, argument):
-            raise Exception("isContainTemplateがFalseを返しました。")
+        print(f"[DEBUG]: {argument}")
+        try:
+            _execute_method(command, argument)
+        except NotMatchError:
+            raise
 
-def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombination) -> bool:
+def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombination) -> None:
 
     # ArgumentCombinationはいずれの場合も少なくとも1つの要素があり、
     # IsContainTemplateArgumentCombinationの場合は、先頭の型は必ずstr
 
+    # 解析できないのはしょうがないのでtype: ignore
+
     if type(argument[0]) is str:
-        return command.isContainTemplate(*argument)
+        if not command.isContainTemplate(*argument):  # type: ignore
+            raise NotMatchError(argument[0])
     else:
-        command.press(*argument)
-        return True
+        command.press(*argument)  # type: ignore
 
 def check_if_alive(command: PythonCommand, event: Event):
     """PythonCommandオブジェクトの`alive`がFalseになった場合にEventをセットする。
     """
     while command.alive:
-        # GUIのレスポンスのため。
         # Processを止めたいだけなのでタイミングはシビアではない。
-        sleep(1)
-    
+        sleep(0.5)
     event.set()
-
-def wait(seconds: float, event: Event):
-    """指定時間待機する（別プロセスで実行することを想定）
-
-    Args:
-        seconds (float): 待機する秒数
-        event (Event): 中断用`Event`オブジェクト
-    """
-    current_time = perf_counter()
-    while perf_counter() < current_time + seconds and not event.is_set():
-        pass

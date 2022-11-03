@@ -5,7 +5,7 @@ class Operation(Protocol):
         pass
     
 class Event(Protocol):
-    def is_set(self) -> bool:
+    def is_set(self) -> bool:  # type: ignore
         pass
     def set(self):
         pass
