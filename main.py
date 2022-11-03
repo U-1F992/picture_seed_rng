@@ -1,6 +1,5 @@
 from multiprocessing import Event, Process
 from threading import Thread
-from typing import Iterable
 from Commands.PythonCommandBase import ImageProcPythonCommand
 
 from .operations import Encounter, LoadGame, MoveToDestination, Reset, SeePicture
