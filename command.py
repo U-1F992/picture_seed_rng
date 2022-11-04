@@ -4,10 +4,9 @@ from threading import Thread
 from Commands.PythonCommandBase import ImageProcPythonCommand
 from Commands.Keys import Hat
 
-from .error import InterruptError
+from .enhance.set_if_not_alive import set_if_not_alive
 from .operations import Encounter, LoadGame, MoveToDestination, Reset, SeePicture
-from .picture_seed import execute
-from .pokecon_extension import check_if_alive
+from .picture_seed_rng.picture_seed import ExecutionInterruptedError, execute
 
 VERSION = "v1.0.0"
 MESSAGE = f"""
@@ -65,14 +64,14 @@ class PictureSeedRNG(ImageProcPythonCommand):
         )
 
         event = Event()
-        check = Thread(target=check_if_alive, args=(self, event))
+        check = Thread(target=set_if_not_alive, args=(self, event))
         check.start()
 
         
         while True:
             try:
                 execute(operations, wait_seconds, event)
-            except InterruptError as e:
+            except ExecutionInterruptedError as e:
                 print(str(e))
                 # 最終的にStopThreadを送出して、コマンド実行を終了させる。
                 self.checkIfAlive()
