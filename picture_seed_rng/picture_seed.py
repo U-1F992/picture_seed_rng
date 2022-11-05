@@ -6,11 +6,6 @@ from typing_extensions import Protocol
 
 from .protocol import Event
 
-class ExecutionInterruptedError(Exception):
-    """コマンドを中断するための例外クラス
-    """
-    pass
-
 class Operation(Protocol):
     def run(self):
         pass
@@ -26,6 +21,11 @@ def wait(seconds: float, event: Event):
     while perf_counter() < current_time + seconds and not event.is_set():
         pass
 
+class TimerInterruptedError(Exception):
+    """タイマーが中断で終了したことを伝える内部例外クラス
+    """
+    pass
+
 def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event: Event):
     """待機している間、ほかの操作を実行する。
     """
@@ -39,12 +39,12 @@ def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event
     # => joinは正常に終了する。
     #
     # GUIのStopにより中断
-    # => check_if_aliveによってeventがセットされ、joinは正常に終了する。
-    #    eventを確認し、中断を検知する。
+    # => set_if_not_aliveによってeventがセットされ、joinは正常に終了する。
+    #    呼び出し元にタイマーが中断されたことを伝える
     # 
     timer.join()
     if event.is_set():
-        raise ExecutionInterruptedError("待機を中断しました。")
+        raise TimerInterruptedError()
 
 def _get_eta(seconds: float):
     return datetime.now() + timedelta(seconds=seconds)
@@ -72,28 +72,33 @@ def execute(
         reset.run()
 
         print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_seeing)}")
-        _run_and_wait_in_parallel(
-            [
-                load_game
-            ], 
-            wait_until_seeing, event
-        )
+        try:
+            _run_and_wait_in_parallel(
+                [
+                    load_game
+                ], 
+                wait_until_seeing, event
+            )
+        except TimerInterruptedError:
+            # タイマーが中断された場合はreturnすれば、次のcheckIfAliveでStopThreadがraiseされて正常に停止する... はず
+            return
 
         print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_encountering)}")
-        _run_and_wait_in_parallel(
-            [
-                see_picture, 
-                move_to_destination
-            ], 
-            wait_until_encountering, event
-        )
+        try:
+            _run_and_wait_in_parallel(
+                [
+                    see_picture, 
+                    move_to_destination
+                ], 
+                wait_until_encountering, event
+            )
+        except TimerInterruptedError:
+            return
 
         encounter.run()
-    
-    except ExecutionInterruptedError:
-        raise
 
     finally:
         # 例外処理は呼び出し元に投げるが、Processは破棄する
+        print("タイマーを破棄します。")
         for proc in [proc for proc in [wait_until_seeing, wait_until_encountering] if proc.is_alive()]:
             proc.join()

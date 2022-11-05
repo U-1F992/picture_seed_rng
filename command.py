@@ -4,9 +4,10 @@ from threading import Thread
 from Commands.PythonCommandBase import ImageProcPythonCommand
 from Commands.Keys import Hat
 
+from .enhance.execute import NotMatchError
 from .enhance.set_if_not_alive import set_if_not_alive
 from .operations import Encounter, LoadGame, MoveToDestination, Reset, SeePicture
-from .picture_seed_rng.picture_seed import ExecutionInterruptedError, execute
+from .picture_seed_rng.picture_seed import execute
 
 VERSION = "v1.0.0"
 MESSAGE = f"""
@@ -69,14 +70,22 @@ class PictureSeedRNG(ImageProcPythonCommand):
 
         
         while True:
+            # doはStopThread以外の例外をおもらししてはいけない
             try:
                 execute(operations, wait_seconds, event)
-            except ExecutionInterruptedError as e:
-                print(str(e))
-                # 最終的にStopThreadを送出して、コマンド実行を終了させる。
                 self.checkIfAlive()
-            
-            self.save_capture()
+                self.save_capture()
+
+            except FileNotFoundError as e:
+                # 画像が見つからない
+                # => 終了
+                print(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+                return
+
+            except NotMatchError as e:
+                # 操作が失敗している
+                # => リセットからやりなおし
+                print(str(e))
     
     def save_capture(self):
         self.camera.saveCapture()

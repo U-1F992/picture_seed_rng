@@ -31,15 +31,14 @@ def execute_sequence(command: ImageProcPythonCommand, arguments: List[ArgumentCo
     """
     for argument in arguments:
         #print(f"[DEBUG]: {argument}")
-        try:
-            _execute_method(command, argument)
-        except NotMatchError:
-            raise
+        _execute_method(command, argument)
 
 def repeat(argument: ArgumentCombination, count: int) -> List[ArgumentCombination]:
     return [argument] * count
 
 def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombination) -> None:
+    
+    command.checkIfAlive()
 
     # ArgumentCombinationはいずれの場合も少なくとも1つの要素があり、
     # IsContainTemplateArgumentCombinationの場合は、先頭の型は必ずstr
