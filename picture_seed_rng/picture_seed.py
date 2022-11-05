@@ -2,9 +2,18 @@ from datetime import datetime, timedelta
 from multiprocessing import Process
 from time import perf_counter
 from typing import List, Tuple
+from typing_extensions import Protocol
 
-from .error import InterruptError
-from .protocol import Event, Operation
+from picture_seed_rng.protocol import Event
+
+class ExecutionInterruptedError(Exception):
+    """コマンドを中断するための例外クラス
+    """
+    pass
+
+class Operation(Protocol):
+    def run(self):
+        pass
 
 def wait(seconds: float, event: Event):
     """指定時間待機する（別プロセスで実行することを想定）
@@ -35,7 +44,7 @@ def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event
     # 
     timer.join()
     if event.is_set():
-        raise InterruptError("待機を中断しました。")
+        raise ExecutionInterruptedError("待機を中断しました。")
 
 def _get_eta(seconds: float):
     return datetime.now() + timedelta(seconds=seconds)
@@ -81,7 +90,7 @@ def execute(
 
         encounter.run()
     
-    except InterruptError:
+    except ExecutionInterruptedError:
         raise
 
     finally:

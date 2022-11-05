@@ -1,21 +1,11 @@
-from os.path import abspath, basename, dirname, exists, join
-
-from Commands.PythonCommandBase import ImageProcPythonCommand, TEMPLATE_PATH
+from Commands.PythonCommandBase import ImageProcPythonCommand
 from Commands.Keys import Button, Hat
 
-from .error import NotMatchError, InterruptError
-from .pokecon_extension import execute_sequence, repeat
+from .enhance.execute import NotMatchError, execute_sequence, repeat
+from .enhance.resolve import resolve
+from .picture_seed_rng.picture_seed import ExecutionInterruptedError
 
 DEFAULT_DURATION = 0.05
-
-# PythonCommandBase.pyで指定されたパスからたどって、リポジトリのtemplatesフォルダを指定する。
-# `join(dirname(abspath(__file__)), "templates")`と同じ場所を指したい
-BASE_PATH = join("..", "Commands", "PythonCommands", basename(dirname(__file__)), "templates")
-def resolve(fileName: str):
-    ret = join(BASE_PATH, fileName)
-    if not exists(join(TEMPLATE_PATH, ret)):
-        raise FileNotFoundError(basename(ret))
-    return ret
 
 class Reset():
     """リセットして、マルチブート待機までの操作を定義するクラス
@@ -44,9 +34,9 @@ class Reset():
                 (resolve("gameboy_logo.png"),),
             ])
         except FileNotFoundError as e:
-            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+            raise ExecutionInterruptedError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
-            raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
+            raise ExecutionInterruptedError(f"テンプレートにマッチしませんでした。{str(e)}")
 
 class LoadGame():
     """マルチブート待ち受けを解除して、絵画鑑賞の直前までの操作を定義するクラス
@@ -72,9 +62,9 @@ class LoadGame():
                 (Button.A, DEFAULT_DURATION, 2),
             ])
         except FileNotFoundError as e:
-            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+            raise ExecutionInterruptedError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
-            raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
+            raise ExecutionInterruptedError(f"テンプレートにマッチしませんでした。{str(e)}")
 
 class SeePicture():
     """絵画を見て、離脱する操作を定義するクラス
@@ -90,9 +80,9 @@ class SeePicture():
                 (Button.A, DEFAULT_DURATION, 2),
             ])
         except FileNotFoundError as e:
-            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+            raise ExecutionInterruptedError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
-            raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
+            raise ExecutionInterruptedError(f"テンプレートにマッチしませんでした。{str(e)}")
 
 class MoveToDestination():
     """絵画を見た直後から、エンカウントの直前まで移動する操作を定義するクラス
@@ -138,9 +128,9 @@ class MoveToDestination():
                 *repeat((Hat.TOP, DEFAULT_DURATION, 0.75), 6),
             ])
         except FileNotFoundError as e:
-            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+            raise ExecutionInterruptedError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
-            raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
+            raise ExecutionInterruptedError(f"テンプレートにマッチしませんでした。{str(e)}")
 
 class Encounter():
     """エンカウント直前から、エンカウントする操作を定義するクラス
@@ -166,6 +156,6 @@ class Encounter():
                 (Button.A, DEFAULT_DURATION, 3),
             ])
         except FileNotFoundError as e:
-            raise InterruptError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+            raise ExecutionInterruptedError(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
         except NotMatchError as e:
-            raise InterruptError(f"テンプレートにマッチしませんでした。{str(e)}")
+            raise ExecutionInterruptedError(f"テンプレートにマッチしませんでした。{str(e)}")
