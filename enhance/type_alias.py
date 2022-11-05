@@ -33,7 +33,7 @@ ButtonSpecifier = Union[
 PressArgumentCombination = Union[
     Tuple[ButtonSpecifier],
     Tuple[ButtonSpecifier, float],
-    Tuple[ButtonSpecifier, float, bool],
+    Tuple[ButtonSpecifier, float, float],
 ]
 
 #
@@ -46,7 +46,7 @@ PressArgumentCombination = Union[
 IsContainTemplateArgumentCombination = Union[
     Tuple[str],
     Tuple[str, float],
-    Tuple[str, float, float],
+    Tuple[str, float, bool],
 ]
 
 ArgumentCombination = Union[

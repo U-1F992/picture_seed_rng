@@ -4,7 +4,7 @@ from time import perf_counter
 from typing import List, Tuple
 from typing_extensions import Protocol
 
-from picture_seed_rng.protocol import Event
+from .protocol import Event
 
 class ExecutionInterruptedError(Exception):
     """コマンドを中断するための例外クラス
