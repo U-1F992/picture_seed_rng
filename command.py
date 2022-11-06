@@ -1,3 +1,4 @@
+from datetime import timedelta
 from multiprocessing import Event
 from threading import Thread
 
@@ -12,8 +13,8 @@ from .picture_seed_rng.picture_seed import execute
 
 # https://github.com/yatsuna827/Orca-GC-Controller/blob/1d69b507651b67bbb64c74cb0973180f2c1108a5/ORCA_GCController/MacroCompiler.cs#L440
 GC_FPS = 59.7275
-def _convert_frame_to_second(frame: int):
-    return frame / GC_FPS
+def _convert_frame_to_timedelta(frame: int):
+    return timedelta(seconds=frame / GC_FPS)
 
 class PictureSeedRNG(ImageProcPythonCommand):
 
@@ -26,31 +27,31 @@ class PictureSeedRNG(ImageProcPythonCommand):
         
         FRAME_SEEING = 0x9E28
         CALIB_SEEING = 24
-        self.__seconds_seeing = _convert_frame_to_second(FRAME_SEEING + CALIB_SEEING)
+        self.__wait_time_seeing = _convert_frame_to_timedelta(FRAME_SEEING + CALIB_SEEING)
 
         FRAME_ENCOUNTERING = 48134
         CALIB_ENCOUNTERING = -552
-        self.__seconds_encountering = _convert_frame_to_second(FRAME_ENCOUNTERING + CALIB_ENCOUNTERING)
+        self.__wait_time_encountering = _convert_frame_to_timedelta(FRAME_ENCOUNTERING + CALIB_ENCOUNTERING)
 
         self.MESSAGE = f"""
-    ==================
-    title: 絵画seed乱数調整 {VERSION}（夢幻ラティ）
-    author: @meilleur_pkmn
+==================
+title: 絵画seed乱数調整 {VERSION}（夢幻ラティ）
+author: @meilleur_pkmn
 
-    prerequisite:
-    - Zメニューのカーソルが「カートリッジこうかん」に合っている。
-    - コンテスト会場（ミナモシティ）の左端にある絵画の前でレポートを書いている。
-    - 手持ちが1体で、ボールの一番上にマスターボールがある。
+prerequisite:
+- Zメニューのカーソルが「カートリッジこうかん」に合っている。
+- コンテスト会場（ミナモシティ）の左端にある絵画の前でレポートを書いている。
+- 手持ちが1体で、ボールの一番上にマスターボールがある。
 
-    information:
-    フレームカウンタ: {hex(FRAME_SEEING)} = {FRAME_SEEING}(F)
-    待機: {FRAME_ENCOUNTERING}(F)
-    おくびょう 30 3 30 31 31 31 氷70
+information:
+フレームカウンタ: {hex(FRAME_SEEING)} = {FRAME_SEEING}(F)
+待機: {FRAME_ENCOUNTERING}(F)
+おくびょう 30 3 30 31 31 31 氷70
 
-    絵画seedずれ: {CALIB_SEEING}(F)
-    エンカウントずれ: {CALIB_ENCOUNTERING}(F)
-    ==================
-    """
+絵画seedずれ: {CALIB_SEEING}(F)
+エンカウントずれ: {CALIB_ENCOUNTERING}(F)
+==================
+"""
 
     def do(self):
         print(self.MESSAGE)
@@ -62,9 +63,9 @@ class PictureSeedRNG(ImageProcPythonCommand):
             MoveToDestination(self), 
             Encounter(self)
         )
-        wait_seconds = (
-            self.__seconds_seeing,
-            self.__seconds_encountering
+        wait_times = (
+            self.__wait_time_seeing,
+            self.__wait_time_encountering
         )
 
         event = Event()
@@ -75,14 +76,14 @@ class PictureSeedRNG(ImageProcPythonCommand):
         while True:
             # doはStopThread以外の例外をおもらししてはいけない
             try:
-                execute(operations, wait_seconds, event)
+                execute(operations, wait_times, event)
                 self.checkIfAlive()
                 self.save_capture()
 
             except FileNotFoundError as e:
                 # 画像が見つからない
                 # => 終了
-                print(f'指定されたテンプレート画像 "{str(e)}" が見つかりません。')
+                print(f'指定されたテンプレート画像が見つかりません: {str(e)}')
                 return
 
             except NotMatchError as e:

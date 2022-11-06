@@ -47,6 +47,6 @@ def _execute_method(command: ImageProcPythonCommand, argument: ArgumentCombinati
 
     if isinstance(argument[0], str):
         if not command.isContainTemplate(*argument):  # type: ignore
-            raise NotMatchError(argument[0])
+            raise NotMatchError(f"テンプレート画像とマッチしませんでした: {argument[0]}")
     else:
         command.press(*argument)  # type: ignore

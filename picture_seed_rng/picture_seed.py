@@ -10,15 +10,16 @@ class Operation(Protocol):
     def run(self):
         pass
 
-def wait(seconds: float, event: Event):
-    """指定時間待機する（別プロセスで実行することを想定）
+def _sleep(wait_time: timedelta, event: Event):
+    """指定時間待機する（別プロセスで実行することを想定したビジーウェイト）
 
     Args:
-        seconds (float): 待機する秒数
+        wait_time (timedelta): 待機する時間
         event (Event): 中断用`Event`オブジェクト
     """
+    total_seconds = wait_time.total_seconds()
     current_time = perf_counter()
-    while perf_counter() < current_time + seconds and not event.is_set():
+    while perf_counter() < current_time + total_seconds and not event.is_set():
         pass
 
 class TimerInterruptedError(Exception):
@@ -26,10 +27,10 @@ class TimerInterruptedError(Exception):
     """
     pass
 
-def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event: Event):
+def _run_and_wait_in_parallel(operations: List[Operation], wait: Process, event: Event):
     """待機している間、ほかの操作を実行する。
     """
-    timer.start()
+    wait.start()
     
     for op in operations:
         op.run()
@@ -42,16 +43,16 @@ def _run_and_wait_in_parallel(operations: List[Operation], timer: Process, event
     # => set_if_not_aliveによってeventがセットされ、joinは正常に終了する。
     #    呼び出し元にタイマーが中断されたことを伝える
     # 
-    timer.join()
+    wait.join()
     if event.is_set():
         raise TimerInterruptedError()
 
-def _get_eta(seconds: float):
-    return datetime.now() + timedelta(seconds=seconds)
+def _get_eta(td: timedelta):
+    return datetime.now() + td
 
 def execute(
     operations: Tuple[Operation, Operation, Operation, Operation, Operation], 
-    wait_seconds: Tuple[float, float],
+    wait_times: Tuple[timedelta, timedelta],
     event: Event
 ):
     """絵画seed乱数調整を実行する。
@@ -63,34 +64,34 @@ def execute(
     """
     
     reset, load_game, see_picture, move_to_destination, encounter = operations
-    seconds_until_seeing, seconds_until_encountering = wait_seconds
+    td_seeing, td_encountering = wait_times
     
-    wait_until_seeing = Process(target=wait, args=(seconds_until_seeing, event))
-    wait_until_encountering = Process(target=wait, args=(seconds_until_encountering, event))
+    wait_seeing = Process(target=_sleep, args=(td_seeing, event))
+    wait_encountering = Process(target=_sleep, args=(td_encountering, event))
 
     try:
         reset.run()
 
-        print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_seeing)}")
+        print(f"タイマーを開始しました。ETA:{_get_eta(td_seeing)}")
         try:
             _run_and_wait_in_parallel(
                 [
                     load_game
                 ], 
-                wait_until_seeing, event
+                wait_seeing, event
             )
         except TimerInterruptedError:
             # タイマーが中断された場合はreturnすれば、次のcheckIfAliveでStopThreadがraiseされて正常に停止する... はず
             return
 
-        print(f"タイマーを開始しました。ETA:{_get_eta(seconds_until_encountering)}")
+        print(f"タイマーを開始しました。ETA:{_get_eta(td_encountering)}")
         try:
             _run_and_wait_in_parallel(
                 [
                     see_picture, 
                     move_to_destination
                 ], 
-                wait_until_encountering, event
+                wait_encountering, event
             )
         except TimerInterruptedError:
             return
@@ -100,5 +101,5 @@ def execute(
     finally:
         # 例外処理は呼び出し元に投げるが、Processは破棄する
         print("タイマーを破棄します。")
-        for proc in [proc for proc in [wait_until_seeing, wait_until_encountering] if proc.is_alive()]:
+        for proc in [proc for proc in [wait_seeing, wait_encountering] if proc.is_alive()]:
             proc.join()
