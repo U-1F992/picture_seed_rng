@@ -17,10 +17,11 @@ def _convert_frame_to_second(frame: int):
 
 class PictureSeedRNG(ImageProcPythonCommand):
 
+    NAME = '絵画seed乱数調整サンプル'
+
     def __init__(self, cam, gui=None):
         super().__init__(cam, gui)
 
-        self.NAME = '絵画seed乱数調整サンプル'
         VERSION = "v1.0.0"
         
         FRAME_SEEING = 0x9E28
